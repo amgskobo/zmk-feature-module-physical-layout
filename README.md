@@ -1,5 +1,13 @@
 # ZMK Physical Layout Module
 
+## Reviewed fork
+
+This fork's reviewed source is on `codex/physical-layout-review` in
+[`amgskobo/zmk-feature-module-physical-layout`](https://github.com/amgskobo/zmk-feature-module-physical-layout/tree/codex/physical-layout-review).
+Select that repository URL and revision in the module's west project entry.
+Keep the module's documented imports enabled where required. The original
+upstream installation examples below describe the upstream repository.
+
 This ZMK module adds a custom ZMK Studio RPC subsystem for describing non-key physical devices in the keyboard layout, such as trackballs, rotary encoders, and trackpads. The web UI renders those modules together with the official ZMK key physical layout data.
 
 The custom RPC subsystem identifier is:
@@ -148,8 +156,8 @@ npm run dev
 
 ```sh
 pre-commit run
-python3 -m unittest
+python3 -m unittest discover -s tests -p test_owner.py
 west zmk-build tests/zmk-config
 west zmk-test tests -m .
-cd web && npm test
+bash tests/run-web.sh
 ```

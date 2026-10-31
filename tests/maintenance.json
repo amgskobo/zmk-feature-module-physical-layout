@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "owner": "zmk-feature-module-physical-layout",
+  "supported_cores": [
+    "dya"
+  ],
+  "unsupported_core_status": "NOT APPLICABLE",
+  "commands": [
+    "python3 tests/protocol/run.py",
+    "python3 -m unittest discover -v -s tests -p test_owner.py",
+    "bash tests/run-web.sh"
+  ],
+  "coverage_map": "tests/README.md",
+  "regression_fixtures": [
+    {
+      "fixture": "tests/web/lifecycle.spec.tsx",
+      "contract": "Six actual-provider cases for deferred connection/index results, errors, loading completion and unmount; all original nine Web scenarios preserved."
+    }
+  ],
+  "preserved_assertions": "Relocated fixtures retain their prior assertions; no snapshot auto-accept or unique assertion removal.",
+  "execution": {
+    "quick": "All behavioral scenarios once; sanitizer variants where supported.",
+    "full": "Same scenarios plus relevant optimization, ABI, role, kernel and supported-core checks.",
+    "outputs": "Use a fresh evidence directory; existing evidence is never overwritten."
+  },
+  "gaps": [
+    "Physical USB/BLE/split delivery, timing, power and retention require matching production-board evidence.",
+    "Host DT accessors are controlled while Zephyr macro utilities and nanopb are real. Owner native/board builds separately validate real DT binding/API compatibility."
+  ],
+  "native_verification": "tests/native_verifier.py: actual exit, registered test completion, raw ordered logs, unchanged snapshots, identical binary repeated three times."
+}
