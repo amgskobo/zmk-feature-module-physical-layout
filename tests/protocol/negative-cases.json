@@ -1,0 +1,25 @@
+{
+  "source": "src/studio/physical_layouts_handler.c",
+  "cases": [
+    {
+      "name": "trackball attribute presence lost",
+      "old": "device.device_type.trackball.has_attrs = true;",
+      "new": "device.device_type.trackball.has_attrs = false;"
+    },
+    {
+      "name": "touchpad coordinate sign lost",
+      "old": "device.device_type.touch_pad.attrs.x = DT_PROP(node_id, x);",
+      "new": "device.device_type.touch_pad.attrs.x = -DT_PROP(node_id, x);"
+    },
+    {
+      "name": "disabled encoder promoted",
+      "old": "encoder.enabled = DT_NODE_HAS_STATUS(node_id, okay) &&",
+      "new": "encoder.enabled = true ||"
+    },
+    {
+      "name": "missing physical device presence",
+      "old": "device.enabled = DT_NODE_HAS_STATUS(node_id, okay);",
+      "new": "device.enabled = true;"
+    }
+  ]
+}

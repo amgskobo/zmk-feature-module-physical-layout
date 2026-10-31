@@ -1,10 +1,7 @@
 zephyr_include_directories(include)
 if(CONFIG_ZMK_PHYSICAL_LAYOUTS_FEATURE)
-    # target_sources(app PRIVATE ...)
-
     if(CONFIG_ZMK_PHYSICAL_LAYOUTS_FEATURE_STUDIO_RPC)
-        file(GLOB_RECURSE C_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
-        target_sources(app PRIVATE ${C_FILES})
+        target_sources(app PRIVATE src/studio/physical_layouts_handler.c)
 
         list(APPEND CMAKE_MODULE_PATH ${ZEPHYR_BASE}/modules/nanopb)
         include(nanopb)

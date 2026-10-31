@@ -7,11 +7,12 @@
 #include <zephyr/devicetree.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/util.h>
-LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
+LOG_MODULE_REGISTER(zmk_feature_module_physical_layout,
+                    CONFIG_ZMK_FEATURE_MODULE_PHYSICAL_LAYOUT_LOG_LEVEL);
 
 static struct zmk_rpc_custom_subsystem_meta physical_layouts_feature_meta = {
     ZMK_RPC_CUSTOM_SUBSYSTEM_UI_URLS(
-        "http://cormoran.github.io/zmk-feature-module-physical-layout/"),
+        "https://cormoran.github.io/zmk-feature-module-physical-layout/"),
     // Unsecured is suggested by default to avoid unlocking in un-reliable
     // environments.
     .security = ZMK_STUDIO_RPC_HANDLER_UNSECURED,
@@ -23,68 +24,56 @@ ZMK_RPC_CUSTOM_SUBSYSTEM(cormoran__physical_layouts, &physical_layouts_feature_m
 ZMK_RPC_CUSTOM_SUBSYSTEM_RESPONSE_BUFFER(cormoran__physical_layouts,
                                          cormoran_zmk_physical_layouts_Response);
 
-static int handle_get_physical_layout_request(cormoran_zmk_physical_layouts_Response *resp);
+/* --- Devicetree checks ---
+ * Every string is copied into a fixed message field; one that does not fit
+ * would be cut silently (possibly inside a UTF-8 character), so it fails the
+ * build instead. */
 
-static bool physical_layouts_rpc_handle_request(const zmk_custom_CallRequest *raw_request,
-                                                pb_callback_t *encode_response) {
-    cormoran_zmk_physical_layouts_Response *resp =
-        ZMK_RPC_CUSTOM_SUBSYSTEM_RESPONSE_BUFFER_ALLOCATE(cormoran__physical_layouts,
-                                                          encode_response);
+#define PHYSICAL_LAYOUT_FIELD_SIZE(type, field) sizeof(((type *)NULL)->field)
 
-    cormoran_zmk_physical_layouts_Request req = cormoran_zmk_physical_layouts_Request_init_zero;
+#define PHYSICAL_LAYOUT_STRING_ASSERT(str, type, field)                                            \
+    BUILD_ASSERT(sizeof(str) <= PHYSICAL_LAYOUT_FIELD_SIZE(type, field),                           \
+                 "physical layout devicetree string does not fit its RPC field")
 
-    pb_istream_t req_stream =
-        pb_istream_from_buffer(raw_request->payload.bytes, raw_request->payload.size);
-    if (!pb_decode(&req_stream, cormoran_zmk_physical_layouts_Request_fields, &req)) {
-        LOG_WRN("Failed to decode physical layouts request: %s", PB_GET_ERROR(&req_stream));
-        cormoran_zmk_physical_layouts_ErrorResponse err =
-            cormoran_zmk_physical_layouts_ErrorResponse_init_zero;
-        snprintf(err.message, sizeof(err.message), "Failed to decode request");
-        resp->which_response_type = cormoran_zmk_physical_layouts_Response_error_tag;
-        resp->response_type.error = err;
-        return true;
-    }
+#define PHYSICAL_LAYOUT_LINK_STRINGS_ASSERT(idx, node_id)                                          \
+    PHYSICAL_LAYOUT_STRING_ASSERT(DT_PROP_BY_IDX(node_id, linked_device_identifiers, idx),         \
+                                  cormoran_zmk_physical_layouts_LinkedDevice, device_identifier);  \
+    PHYSICAL_LAYOUT_STRING_ASSERT(DT_PROP_BY_IDX(node_id, linked_subsystems, idx),                 \
+                                  cormoran_zmk_physical_layouts_LinkedDevice,                      \
+                                  subsystem_identifier);
 
-    int rc = 0;
-    switch (req.which_request_type) {
-    case cormoran_zmk_physical_layouts_Request_get_physical_layout_tag:
-        rc = handle_get_physical_layout_request(resp);
-        break;
-    default:
-        LOG_WRN("Unsupported physical layouts request type: %d", req.which_request_type);
-        rc = -1;
-    }
-
-    if (rc != 0) {
-        cormoran_zmk_physical_layouts_ErrorResponse err =
-            cormoran_zmk_physical_layouts_ErrorResponse_init_zero;
-        snprintf(err.message, sizeof(err.message), "Failed to process request");
-        resp->which_response_type = cormoran_zmk_physical_layouts_Response_error_tag;
-        resp->response_type.error = err;
-    }
-    return true;
-}
-
-#define PHYSICAL_LAYOUT_LINK_ASSERT(node_id)                                                       \
+#define PHYSICAL_LAYOUT_DEVICE_ASSERT(node_id)                                                     \
     BUILD_ASSERT(DT_PROP_LEN_OR(node_id, linked_device_identifiers, 0) ==                          \
                      DT_PROP_LEN_OR(node_id, linked_subsystems, 0),                                \
-                 "linked-device-identifiers and linked-subsystems must have the same length")
+                 "linked-device-identifiers and linked-subsystems must have the same length");     \
+    PHYSICAL_LAYOUT_STRING_ASSERT(DT_NODE_FULL_NAME(node_id),                                      \
+                                  cormoran_zmk_physical_layouts_PhysicalDevice, identifier);       \
+    PHYSICAL_LAYOUT_STRING_ASSERT(DT_PROP(node_id, display_name),                                  \
+                                  cormoran_zmk_physical_layouts_PhysicalDevice, display_name);     \
+    LISTIFY(DT_PROP_LEN_OR(node_id, linked_device_identifiers, 0),                                 \
+            PHYSICAL_LAYOUT_LINK_STRINGS_ASSERT, (), node_id)
 
-#define PHYSICAL_LAYOUT_TRACKBALL_LINK_ASSERT(node_id)                                             \
+#define PHYSICAL_LAYOUT_TRACKBALL_ASSERT(node_id)                                                  \
     COND_CODE_1(DT_NODE_HAS_COMPAT(node_id, cormoran_physical_layout_trackball),                   \
-                (PHYSICAL_LAYOUT_LINK_ASSERT(node_id);), ())
+                (PHYSICAL_LAYOUT_DEVICE_ASSERT(node_id);), ())
 
-#define PHYSICAL_LAYOUT_TOUCH_PAD_LINK_ASSERT(node_id)                                             \
+#define PHYSICAL_LAYOUT_TOUCH_PAD_ASSERT(node_id)                                                  \
     COND_CODE_1(DT_NODE_HAS_COMPAT(node_id, cormoran_physical_layout_touch_pad),                   \
-                (PHYSICAL_LAYOUT_LINK_ASSERT(node_id);), ())
+                (PHYSICAL_LAYOUT_DEVICE_ASSERT(node_id);), ())
 
-#define PHYSICAL_LAYOUT_CUSTOM_MODULE_LINK_ASSERT(node_id)                                         \
+#define PHYSICAL_LAYOUT_CUSTOM_MODULE_TYPE_ASSERT(node_id)                                         \
+    PHYSICAL_LAYOUT_STRING_ASSERT(DT_PROP(node_id, type),                                          \
+                                  cormoran_zmk_physical_layouts_CustomModule, type)
+
+#define PHYSICAL_LAYOUT_CUSTOM_MODULE_ASSERT(node_id)                                              \
     COND_CODE_1(DT_NODE_HAS_COMPAT(node_id, cormoran_physical_layout_custom_module),               \
-                (PHYSICAL_LAYOUT_LINK_ASSERT(node_id);), ())
+                (PHYSICAL_LAYOUT_DEVICE_ASSERT(node_id);                                           \
+                 PHYSICAL_LAYOUT_CUSTOM_MODULE_TYPE_ASSERT(node_id);),                             \
+                ())
 
-DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_TRACKBALL_LINK_ASSERT);
-DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_TOUCH_PAD_LINK_ASSERT);
-DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_CUSTOM_MODULE_LINK_ASSERT);
+DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_TRACKBALL_ASSERT);
+DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_TOUCH_PAD_ASSERT);
+DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_CUSTOM_MODULE_ASSERT);
 
 #define PHYSICAL_LAYOUT_LINK_ENCODE(idx, node_id)                                                  \
     do {                                                                                           \
@@ -141,10 +130,6 @@ DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_CUSTOM_MODULE_LINK_ENCODER);
     device.enabled = DT_NODE_HAS_STATUS(node_id, okay);                                            \
     device.links.funcs.encode = PHYSICAL_LAYOUT_LINK_ENCODER_NAME(node_id)
 
-#define PHYSICAL_LAYOUT_LINKED_DEVICE_INIT(node_id)                                                \
-    PHYSICAL_LAYOUT_DEVICE_INIT(node_id);                                                          \
-    device.links.funcs.encode = PHYSICAL_LAYOUT_LINK_ENCODER_NAME(node_id)
-
 #define PHYSICAL_LAYOUT_DEVICE_ENCODE()                                                            \
     do {                                                                                           \
         if (!pb_encode_tag_for_field(stream, field)) {                                             \
@@ -160,7 +145,7 @@ DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_CUSTOM_MODULE_LINK_ENCODER);
 
 #define PHYSICAL_LAYOUT_TRACKBALL_ENCODE(node_id)                                                  \
     do {                                                                                           \
-        PHYSICAL_LAYOUT_LINKED_DEVICE_INIT(node_id);                                               \
+        PHYSICAL_LAYOUT_DEVICE_INIT(node_id);                                                      \
         device.which_device_type = cormoran_zmk_physical_layouts_PhysicalDevice_trackball_tag;     \
         device.device_type.trackball.has_attrs = true;                                             \
         device.device_type.trackball.attrs.x = DT_PROP(node_id, x);                                \
@@ -195,7 +180,7 @@ DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_CUSTOM_MODULE_LINK_ENCODER);
 
 #define PHYSICAL_LAYOUT_TOUCH_PAD_ENCODE(node_id)                                                  \
     do {                                                                                           \
-        PHYSICAL_LAYOUT_LINKED_DEVICE_INIT(node_id);                                               \
+        PHYSICAL_LAYOUT_DEVICE_INIT(node_id);                                                      \
         device.which_device_type = cormoran_zmk_physical_layouts_PhysicalDevice_touch_pad_tag;     \
         device.device_type.touch_pad.has_attrs = true;                                             \
         device.device_type.touch_pad.attrs.width = DT_PROP(node_id, width);                        \
@@ -210,7 +195,7 @@ DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_CUSTOM_MODULE_LINK_ENCODER);
 
 #define PHYSICAL_LAYOUT_CUSTOM_MODULE_ENCODE(node_id)                                              \
     do {                                                                                           \
-        PHYSICAL_LAYOUT_LINKED_DEVICE_INIT(node_id);                                               \
+        PHYSICAL_LAYOUT_DEVICE_INIT(node_id);                                                      \
         device.which_device_type = cormoran_zmk_physical_layouts_PhysicalDevice_custom_module_tag; \
         snprintf(device.device_type.custom_module.type,                                            \
                  sizeof(device.device_type.custom_module.type), "%s", DT_PROP(node_id, type));     \
@@ -259,7 +244,7 @@ static bool encode_rotary_encoders(pb_ostream_t *stream, const pb_field_t *field
     return true;
 }
 
-static int handle_get_physical_layout_request(cormoran_zmk_physical_layouts_Response *resp) {
+static void handle_get_physical_layout_request(cormoran_zmk_physical_layouts_Response *resp) {
     cormoran_zmk_physical_layouts_GetPhysicalLayoutResponse result =
         cormoran_zmk_physical_layouts_GetPhysicalLayoutResponse_init_zero;
 
@@ -268,5 +253,40 @@ static int handle_get_physical_layout_request(cormoran_zmk_physical_layouts_Resp
 
     resp->which_response_type = cormoran_zmk_physical_layouts_Response_physical_layout_tag;
     resp->response_type.physical_layout = result;
-    return 0;
+}
+
+static void set_error(cormoran_zmk_physical_layouts_Response *resp, const char *message) {
+    cormoran_zmk_physical_layouts_ErrorResponse err =
+        cormoran_zmk_physical_layouts_ErrorResponse_init_zero;
+    snprintf(err.message, sizeof(err.message), "%s", message);
+    resp->which_response_type = cormoran_zmk_physical_layouts_Response_error_tag;
+    resp->response_type.error = err;
+}
+
+static bool physical_layouts_rpc_handle_request(const zmk_custom_CallRequest *raw_request,
+                                                pb_callback_t *encode_response) {
+    cormoran_zmk_physical_layouts_Response *resp =
+        ZMK_RPC_CUSTOM_SUBSYSTEM_RESPONSE_BUFFER_ALLOCATE(cormoran__physical_layouts,
+                                                          encode_response);
+
+    cormoran_zmk_physical_layouts_Request req = cormoran_zmk_physical_layouts_Request_init_zero;
+
+    pb_istream_t req_stream =
+        pb_istream_from_buffer(raw_request->payload.bytes, raw_request->payload.size);
+    if (!pb_decode(&req_stream, cormoran_zmk_physical_layouts_Request_fields, &req)) {
+        LOG_WRN("Failed to decode physical layouts request: %s", PB_GET_ERROR(&req_stream));
+        set_error(resp, "Failed to decode request");
+        return true;
+    }
+
+    switch (req.which_request_type) {
+    case cormoran_zmk_physical_layouts_Request_get_physical_layout_tag:
+        handle_get_physical_layout_request(resp);
+        break;
+    default:
+        LOG_WRN("Unsupported physical layouts request type: %d", req.which_request_type);
+        set_error(resp, "Failed to process request");
+        break;
+    }
+    return true;
 }
