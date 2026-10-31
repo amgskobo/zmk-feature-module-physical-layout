@@ -4,8 +4,8 @@ import {
   ZMKAppProvider,
 } from "@cormoran/zmk-studio-react-hook/testing";
 import { call_rpc } from "@zmkfirmware/zmk-studio-ts-client";
-import { PhysicalLayoutSection, SUBSYSTEM_IDENTIFIER } from "../src/App";
-import { Response } from "../src/proto/zmk/physical_layouts/physical_layouts";
+import { PhysicalLayoutSection, SUBSYSTEM_IDENTIFIER } from "../../web/src/App";
+import { Response } from "../../web/src/proto/zmk/physical_layouts/physical_layouts";
 
 type RpcRequest = {
   custom?: unknown;
@@ -95,7 +95,7 @@ const mockLayoutResponses = () => {
         });
       }
       return Promise.resolve({});
-    }
+    },
   );
 };
 
@@ -115,28 +115,28 @@ describe("PhysicalLayoutSection Component", () => {
       render(
         <ZMKAppProvider value={mockZMKApp}>
           <PhysicalLayoutSection />
-        </ZMKAppProvider>
+        </ZMKAppProvider>,
       );
 
       expect(
-        screen.getByRole("heading", { name: "Physical Layout" })
+        screen.getByRole("heading", { name: "Physical Layout" }),
       ).toBeInTheDocument();
       expect(
-        (await screen.findAllByText(/Primary Trackball/i)).length
+        (await screen.findAllByText(/Primary Trackball/i)).length,
       ).toBeGreaterThan(0);
       expect(screen.getByText(/Refresh/i)).toBeInTheDocument();
       expect(
         screen.getByText(
-          /trackball_sensor \(zmk__trackball\), trackball_button \(zmk__pointing_buttons\)/i
-        )
+          /trackball_sensor \(zmk__trackball\), trackball_button \(zmk__pointing_buttons\)/i,
+        ),
       ).toBeInTheDocument();
       expect(screen.queryByText("Key 0")).not.toBeInTheDocument();
       expect(screen.getAllByText("120 x 120").length).toBeGreaterThan(0);
       expect(
-        document.querySelector('g[transform="rotate(45 0 0)"]')
+        document.querySelector('g[transform="rotate(45 0 0)"]'),
       ).toBeInTheDocument();
       expect(
-        document.querySelector('g[transform="rotate(-45 0 0)"]')
+        document.querySelector('g[transform="rotate(-45 0 0)"]'),
       ).toBeInTheDocument();
     });
 
@@ -149,11 +149,11 @@ describe("PhysicalLayoutSection Component", () => {
       render(
         <ZMKAppProvider value={mockZMKApp}>
           <PhysicalLayoutSection />
-        </ZMKAppProvider>
+        </ZMKAppProvider>,
       );
 
       expect(
-        await screen.findByText(/2 keyswitches, 1 module, Default/i)
+        await screen.findByText(/2 keyswitches, 1 module, Default/i),
       ).toBeInTheDocument();
     });
 
@@ -171,7 +171,7 @@ describe("PhysicalLayoutSection Component", () => {
       render(
         <ZMKAppProvider value={mockZMKApp}>
           <PhysicalLayoutSection />
-        </ZMKAppProvider>
+        </ZMKAppProvider>,
       );
 
       await screen.findByText(/2 keyswitches, 1 module, Default/i);
@@ -192,16 +192,16 @@ describe("PhysicalLayoutSection Component", () => {
       render(
         <ZMKAppProvider value={mockZMKApp}>
           <PhysicalLayoutSection />
-        </ZMKAppProvider>
+        </ZMKAppProvider>,
       );
 
       expect(
-        screen.getByText(/Subsystem "cormoran__physical_layouts" not found/i)
+        screen.getByText(/Subsystem "cormoran__physical_layouts" not found/i),
       ).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Make sure your firmware includes the physical layout module/i
-        )
+          /Make sure your firmware includes the physical layout module/i,
+        ),
       ).toBeInTheDocument();
     });
   });

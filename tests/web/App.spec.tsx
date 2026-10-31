@@ -1,8 +1,8 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { setupZMKMocks } from "@cormoran/zmk-studio-react-hook/testing";
-import App, { SUBSYSTEM_IDENTIFIER } from "../src/App";
-import { Response } from "../src/proto/zmk/physical_layouts/physical_layouts";
+import App, { SUBSYSTEM_IDENTIFIER } from "../../web/src/App";
+import { Response } from "../../web/src/proto/zmk/physical_layouts/physical_layouts";
 
 type RpcRequest = {
   custom?: unknown;
@@ -26,7 +26,7 @@ describe("App Component", () => {
 
       expect(screen.getByText(/Physical Layout Studio/i)).toBeInTheDocument();
       expect(
-        screen.getByText(/Keyboard and module geometry/i)
+        screen.getByText(/Keyboard and module geometry/i),
       ).toBeInTheDocument();
     });
 
@@ -40,7 +40,7 @@ describe("App Component", () => {
       render(<App />);
 
       expect(
-        screen.getByText(new RegExp(SUBSYSTEM_IDENTIFIER))
+        screen.getByText(new RegExp(SUBSYSTEM_IDENTIFIER)),
       ).toBeInTheDocument();
     });
   });
@@ -122,7 +122,7 @@ describe("App Component", () => {
             });
           }
           return Promise.resolve({});
-        }
+        },
       );
 
       const { connect: serial_connect } =
@@ -139,17 +139,17 @@ describe("App Component", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText(/Connected to: Test Keyboard/i)
+          screen.getByText(/Connected to: Test Keyboard/i),
         ).toBeInTheDocument();
       });
 
       expect(screen.getByText(/Disconnect/i)).toBeInTheDocument();
       expect(
-        screen.getByRole("heading", { name: "Physical Layout" })
+        screen.getByRole("heading", { name: "Physical Layout" }),
       ).toBeInTheDocument();
       await waitFor(() => {
         expect(
-          screen.getAllByText(/Primary Trackball/i).length
+          screen.getAllByText(/Primary Trackball/i).length,
         ).toBeGreaterThan(0);
       });
       expect(screen.queryByText("Key 0")).not.toBeInTheDocument();

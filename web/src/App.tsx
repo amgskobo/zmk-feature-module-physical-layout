@@ -1,4 +1,11 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import "./App.css";
 import { call_rpc } from "@zmkfirmware/zmk-studio-ts-client";
 import { connect as serial_connect } from "@zmkfirmware/zmk-studio-ts-client/transport/serial";
@@ -259,19 +266,46 @@ function transformFor(item: KeyPhysicalAttrs | ModulePresentation) {
 
 export function PhysicalLayoutSection() {
   const zmkApp = useContext(ZMKAppContext);
-  const [layout, setLayout] = useState<LayoutState>(EMPTY_LAYOUT);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [view, setView] = useState<{
+    connection: unknown;
+    subsystemIndex: number | undefined;
+    layout: LayoutState;
+    error: string | null;
+    isLoading: boolean;
+  }>({
+    connection: null,
+    subsystemIndex: undefined,
+    layout: EMPTY_LAYOUT,
+    error: null,
+    isLoading: false,
+  });
+  const generation = useRef(0);
 
   const subsystem = zmkApp?.findSubsystem(SUBSYSTEM_IDENTIFIER);
   const connection = zmkApp?.state.connection;
   const subsystemIndex = subsystem?.index;
+  const current =
+    view.connection === connection && view.subsystemIndex === subsystemIndex;
+  const layout = current ? view.layout : EMPTY_LAYOUT;
+  const error = current ? view.error : null;
+  const isLoading = current && view.isLoading;
 
   const loadPhysicalLayout = useCallback(async () => {
     if (!connection || subsystemIndex === undefined) return;
 
-    setIsLoading(true);
-    setError(null);
+    const token = ++generation.current;
+    const active = () => token === generation.current;
+    setView((previous) => ({
+      connection,
+      subsystemIndex,
+      layout:
+        previous.connection === connection &&
+        previous.subsystemIndex === subsystemIndex
+          ? previous.layout
+          : EMPTY_LAYOUT,
+      error: null,
+      isLoading: true,
+    }));
 
     try {
       const service = new ZMKCustomSubsystem(connection, subsystemIndex);
@@ -287,6 +321,7 @@ export function PhysicalLayoutSection() {
           keymap: { getPhysicalLayouts: true },
         }).catch(() => null),
       ]);
+      if (!active()) return;
 
       const physicalLayouts = keymapResponse?.keymap?.getPhysicalLayouts;
       const activeLayout =
@@ -309,19 +344,27 @@ export function PhysicalLayoutSection() {
         }
       }
 
-      setLayout(nextLayout);
+      setView((previous) => ({ ...previous, layout: nextLayout }));
     } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "Failed to load layout data"
-      );
+      if (active())
+        setView((previous) => ({
+          ...previous,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to load layout data",
+        }));
     } finally {
-      setIsLoading(false);
+      if (active()) setView((previous) => ({ ...previous, isLoading: false }));
     }
   }, [connection, subsystemIndex]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void loadPhysicalLayout(), 0);
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      ++generation.current;
+    };
   }, [loadPhysicalLayout]);
 
   const physicalModules = useMemo(
