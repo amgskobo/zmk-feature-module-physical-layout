@@ -29,15 +29,18 @@ def main():
         source = folder / "handler.c"
         text = original
         if "old" in case:
-            if text.count(case["old"]) != 1:
-                raise AssertionError("Ambiguous source fault: " + case["name"])
-            text = text.replace(case["old"], case["new"])
+            for replacement in [case] + case.get("additional_replacements", []):
+                if text.count(replacement["old"]) != 1:
+                    raise AssertionError("Ambiguous source fault: " + case["name"])
+                text = text.replace(replacement["old"], replacement["new"])
         source.write_text(text)
         command = [
             sys.executable,
             str(ROOT / "tests/protocol/run.py"),
             "--source",
             str(source),
+            "--output",
+            str(folder / "protocol"),
         ]
         with (folder / "run.log").open("wb") as log:
             result = subprocess.run(
@@ -65,6 +68,7 @@ def main():
             passed=detected,
             command=command,
             source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+            protocol_results=str(folder / "protocol/results.json"),
         )
         results.append(row)
         (out / "results.json").write_text(json.dumps(results, indent=2))

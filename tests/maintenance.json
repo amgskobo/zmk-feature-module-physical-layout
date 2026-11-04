@@ -15,6 +15,14 @@
     {
       "fixture": "tests/web/lifecycle.spec.tsx",
       "contract": "Six actual-provider cases for deferred connection/index results, errors, loading completion and unmount; all original nine Web scenarios preserved."
+    },
+    {
+      "fixture": "tests/web/deadline.spec.tsx",
+      "contract": "Eight lost-reply/deadline, reconnect, late-result, failure-recovery and retirement cases; all prior fifteen scenarios preserved."
+    },
+    {
+      "fixture": "tests/web/deadline-stream.spec.tsx",
+      "contract": "Actual SDK global mutex and Web Streams verify that a UI deadline does not cancel a pending read, repeated Refresh queues no work, and stream replacement recovers. Physical transport remains outside this fixture."
     }
   ],
   "preserved_assertions": "Relocated fixtures retain their prior assertions; no snapshot auto-accept or unique assertion removal.",
@@ -27,5 +35,21 @@
     "Physical USB/BLE/split delivery, timing, power and retention require matching production-board evidence.",
     "Host DT accessors are controlled while Zephyr macro utilities and nanopb are real. Owner native/board builds separately validate real DT binding/API compatibility."
   ],
-  "native_verification": "tests/native_verifier.py: actual exit, registered test completion, raw ordered logs, unchanged snapshots, identical binary repeated three times."
+  "native_verification": "tests/native_verifier.py: actual exit, registered test completion, raw ordered logs, unchanged snapshots, identical binary repeated three times.",
+  "review_regressions": {
+    "fixtures": [
+      "tests/protocol/fixture_dt.h",
+      "tests/nested",
+      "tests/zmk-config/build.yaml"
+    ],
+    "contract": "Grouped/root device families preserve geometry, links, flags and bounds; the peripheral cannot enable the handler without core RPC. Original assertions and all three board targets retained.",
+    "repeats": "Each optimized/sanitized protocol binary and native fixture executes three times.",
+    "negative_control": "nested devices omitted coherently restores root-only trackball link-function generation and matching device enumeration; both selectors match exactly once. Other four faults, five-case order, compiler flags and runtime assertions remain unchanged; compilation failure never counts as detection."
+  },
+  "protocol_evidence": {
+    "entry": "python3 tests/protocol/run.py [--output FRESH_ABSOLUTE_DIRECTORY] [--variant all|sanitized-root|sanitized-nested|optimized-root|optimized-nested|oversized]",
+    "contract": "No arguments preserve quick/full case order, compiler argv/flags, fixture assertions, same-binary three repetitions and final oversized-name compile-refusal. Focused selection explicitly records canonical full matrix NOT RUN.",
+    "retention": "Explicit output preserves inputs/hashes, generated artifacts, actual binaries/hashes, commands, ordered process logs, selected environment/complete environment hash and partial results even on fail-fast errors; source drift fails admission. The negative dispatcher supplies a fresh output for each unchanged baseline/fault invocation.",
+    "limits": "No execution is implied by runner setup. Evidence includes local paths and requires a reviewed publication copy; focused results do not replace the complete owner matrix."
+  }
 }

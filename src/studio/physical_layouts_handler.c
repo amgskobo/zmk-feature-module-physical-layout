@@ -71,9 +71,9 @@ ZMK_RPC_CUSTOM_SUBSYSTEM_RESPONSE_BUFFER(cormoran__physical_layouts,
                  PHYSICAL_LAYOUT_CUSTOM_MODULE_TYPE_ASSERT(node_id);),                             \
                 ())
 
-DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_TRACKBALL_ASSERT);
-DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_TOUCH_PAD_ASSERT);
-DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_CUSTOM_MODULE_ASSERT);
+DT_FOREACH_NODE(PHYSICAL_LAYOUT_TRACKBALL_ASSERT);
+DT_FOREACH_NODE(PHYSICAL_LAYOUT_TOUCH_PAD_ASSERT);
+DT_FOREACH_NODE(PHYSICAL_LAYOUT_CUSTOM_MODULE_ASSERT);
 
 #define PHYSICAL_LAYOUT_LINK_ENCODE(idx, node_id)                                                  \
     do {                                                                                           \
@@ -117,9 +117,9 @@ DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_CUSTOM_MODULE_ASSERT);
     COND_CODE_1(DT_NODE_HAS_COMPAT(node_id, cormoran_physical_layout_custom_module),               \
                 (PHYSICAL_LAYOUT_LINK_ENCODER(node_id)), ())
 
-DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_TRACKBALL_LINK_ENCODER);
-DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_TOUCH_PAD_LINK_ENCODER);
-DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_CUSTOM_MODULE_LINK_ENCODER);
+DT_FOREACH_NODE(PHYSICAL_LAYOUT_TRACKBALL_LINK_ENCODER);
+DT_FOREACH_NODE(PHYSICAL_LAYOUT_TOUCH_PAD_LINK_ENCODER);
+DT_FOREACH_NODE(PHYSICAL_LAYOUT_CUSTOM_MODULE_LINK_ENCODER);
 
 #define PHYSICAL_LAYOUT_DEVICE_INIT(node_id)                                                       \
     cormoran_zmk_physical_layouts_PhysicalDevice device =                                          \
@@ -230,9 +230,9 @@ static bool encode_physical_devices(pb_ostream_t *stream, const pb_field_t *fiel
                                     void *const *arg) {
     ARG_UNUSED(arg);
 
-    DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_TRACKBALL_ENCODE_IF);
-    DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_TOUCH_PAD_ENCODE_IF);
-    DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_CUSTOM_MODULE_ENCODE_IF);
+    DT_FOREACH_NODE(PHYSICAL_LAYOUT_TRACKBALL_ENCODE_IF);
+    DT_FOREACH_NODE(PHYSICAL_LAYOUT_TOUCH_PAD_ENCODE_IF);
+    DT_FOREACH_NODE(PHYSICAL_LAYOUT_CUSTOM_MODULE_ENCODE_IF);
     return true;
 }
 
@@ -240,7 +240,7 @@ static bool encode_rotary_encoders(pb_ostream_t *stream, const pb_field_t *field
                                    void *const *arg) {
     ARG_UNUSED(arg);
 
-    DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_ROTARY_ENCODERS_ENCODE_IF);
+    DT_FOREACH_NODE(PHYSICAL_LAYOUT_ROTARY_ENCODERS_ENCODE_IF);
     return true;
 }
 

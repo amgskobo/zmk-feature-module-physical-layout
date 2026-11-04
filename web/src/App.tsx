@@ -24,6 +24,38 @@ import {
 } from "./proto/zmk/physical_layouts/physical_layouts";
 
 export const SUBSYSTEM_IDENTIFIER = "cormoran__physical_layouts";
+const retiredConnections = new WeakSet<object>();
+
+class LayoutTimeoutError extends Error {
+  constructor() {
+    super("Layout request timed out. Disconnect and reconnect to retry.");
+  }
+}
+
+async function withLayoutDeadline<T>(
+  load: () => Promise<T>,
+  signal: AbortSignal
+): Promise<T> {
+  let timer: number | undefined;
+  let retire!: () => void;
+  const deadline = new Promise<never>((_resolve, reject) => {
+    timer = window.setTimeout(() => reject(new LayoutTimeoutError()), 5000);
+    retire = () => reject(new Error("Layout request retired"));
+    signal.addEventListener("abort", retire, { once: true });
+  });
+  try {
+    return await Promise.race([
+      deadline,
+      Promise.resolve().then(() => {
+        signal.throwIfAborted();
+        return load();
+      }),
+    ]);
+  } finally {
+    window.clearTimeout(timer);
+    signal.removeEventListener("abort", retire);
+  }
+}
 
 function App() {
   return (
@@ -280,6 +312,7 @@ export function PhysicalLayoutSection() {
     isLoading: false,
   });
   const generation = useRef(0);
+  const pendingLoad = useRef<AbortController | null>(null);
 
   const subsystem = zmkApp?.findSubsystem(SUBSYSTEM_IDENTIFIER);
   const connection = zmkApp?.state.connection;
@@ -294,6 +327,9 @@ export function PhysicalLayoutSection() {
     if (!connection || subsystemIndex === undefined) return;
 
     const token = ++generation.current;
+    pendingLoad.current?.abort();
+    const controller = new AbortController();
+    pendingLoad.current = controller;
     const active = () => token === generation.current;
     setView((previous) => ({
       connection,
@@ -308,6 +344,9 @@ export function PhysicalLayoutSection() {
     }));
 
     try {
+      if (retiredConnections.has(connection)) {
+        throw new LayoutTimeoutError();
+      }
       const service = new ZMKCustomSubsystem(connection, subsystemIndex);
 
       const request = Request.create({
@@ -315,12 +354,16 @@ export function PhysicalLayoutSection() {
       });
 
       const payload = Request.encode(request).finish();
-      const [modulePayload, keymapResponse] = await Promise.all([
-        service.callRPC(payload),
-        call_rpc(connection, {
-          keymap: { getPhysicalLayouts: true },
-        }).catch(() => null),
-      ]);
+      const [modulePayload, keymapResponse] = await withLayoutDeadline(
+        () =>
+          Promise.all([
+            service.callRPC(payload),
+            call_rpc(connection, {
+              keymap: { getPhysicalLayouts: true },
+            }).catch(() => null),
+          ]),
+        controller.signal
+      );
       if (!active()) return;
 
       const physicalLayouts = keymapResponse?.keymap?.getPhysicalLayouts;
@@ -346,6 +389,11 @@ export function PhysicalLayoutSection() {
 
       setView((previous) => ({ ...previous, layout: nextLayout }));
     } catch (error) {
+      if (error instanceof LayoutTimeoutError) {
+        // A deadline does not cancel the SDK's pending stream read/global mutex.
+        // Never queue more requests on this connection, even after a late reply.
+        retiredConnections.add(connection);
+      }
       if (active())
         setView((previous) => ({
           ...previous,
@@ -355,6 +403,7 @@ export function PhysicalLayoutSection() {
               : "Failed to load layout data",
         }));
     } finally {
+      if (pendingLoad.current === controller) pendingLoad.current = null;
       if (active()) setView((previous) => ({ ...previous, isLoading: false }));
     }
   }, [connection, subsystemIndex]);
@@ -364,6 +413,8 @@ export function PhysicalLayoutSection() {
     return () => {
       window.clearTimeout(timer);
       ++generation.current;
+      pendingLoad.current?.abort();
+      pendingLoad.current = null;
     };
   }, [loadPhysicalLayout]);
 

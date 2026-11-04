@@ -13,3 +13,8 @@ include:
     board: xiao_ble//zmk
     shield: tester_xiao
     cmake-args: -DCONFIG_ZMK_PHYSICAL_LAYOUTS_FEATURE=y
+
+  - artifact: physical_layout_peripheral_rpc_unavailable
+    board: xiao_ble//zmk
+    shield: tester_xiao
+    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n -DCONFIG_ZMK_PHYSICAL_LAYOUTS_FEATURE=y -DCONFIG_ZMK_PHYSICAL_LAYOUTS_FEATURE_STUDIO_RPC=y -DKCONFIG_WARNINGS_AS_ERRORS=OFF

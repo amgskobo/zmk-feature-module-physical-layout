@@ -1,10 +1,15 @@
 /* SPDX-License-Identifier: MIT
  * Controlled DT accessors; production encoders and Zephyr macro utilities are real.
- * Four root nodes exercise every owned device family, three links and two encoders. */
+ * Root and grouped nodes exercise every owned device family, three links and two encoders. */
 #pragma once
 #include <zephyr/sys/util_macro.h>
 #define DT_ROOT root
+#ifdef FIXTURE_NESTED_LAYOUT
+#define DT_FOREACH_CHILD(root, fn)
+#else
 #define DT_FOREACH_CHILD(root, fn) fn(ball) fn(pad) fn(module) fn(encoders)
+#endif
+#define DT_FOREACH_NODE(fn) fn(ball) fn(pad) fn(module) fn(encoders)
 #define DT_NODE_HASH(n) n
 #define DT_NODE_HAS_COMPAT(n, compat) UTIL_CAT(UTIL_CAT(n, _), compat)
 #define ball_cormoran_physical_layout_trackball 1

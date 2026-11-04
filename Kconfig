@@ -5,7 +5,7 @@ if ZMK_PHYSICAL_LAYOUTS_FEATURE
 
 config ZMK_PHYSICAL_LAYOUTS_FEATURE_STUDIO_RPC
     bool "Enable physical layout modules custom Studio RPC"
-    depends on ZMK_STUDIO
+    depends on ZMK_STUDIO_RPC
 
 endif
 
