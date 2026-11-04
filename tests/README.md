@@ -16,7 +16,7 @@ bash tests/run-web.sh
 
 ## Web protocol and rendering boundary
 
-`tests/web/` owns the two Web suites, setup, Jest selection, and ESLint wrapper.
+`tests/web/` owns the Web suites, setup, Jest selection, and ESLint wrapper.
 `App.spec.tsx` retains four scenarios for the header, disconnected connection
 control, footer, and connection action. `PhysicalLayoutSection.spec.tsx` retains
 five scenarios for layout controls, loaded key/module counts, one automatic load
@@ -31,6 +31,18 @@ connection's loading state; an unmounted request is retired. Subsystem-index-onl
 replacement also retires old success/error on the same connection. Five cases
 fail against the archived pre-repair app; the unmount control passes. The
 original nine scenarios remain.
+
+`deadline.spec.tsx` adds eight deadline/recovery cases with the actual provider
+and custom RPC wrapper. A missing official or custom reply leaves Loading at
+five seconds with reconnect guidance. Refresh does not queue more calls on the
+timed-out connection; late success/error cannot restore it. A new connection
+recovers. Secured-read rejection and malformed-module recovery remain positive
+controls. Connection/index retirement and unmount clear their owned deadline
+without affecting a replacement load. `deadline-stream.spec.tsx` adds one case
+using the actual SDK global mutex and real Web Streams: the timed-out read
+still owns its reader, retries do not enqueue, and a controlled disconnection
+followed by a replacement stream recovers. This does not establish physical
+transport cancellation or acceptance. All fifteen prior scenarios remain.
 
 The dispatcher generates the real owner schema and runs each scenario once.
 `bash tests/run-web.sh --coverage` adds coverage without changing selection.
@@ -73,6 +85,42 @@ at every insufficient output capacity. Framework APIs are controlled; no core
 source is patched. This complements registration/native and board checks. A
 fixture display-name longer than its 64-byte message field must fail to build.
 The runner is also `test_owner.WestCommandsTests.test_protocol`.
+
+With no arguments, the existing quick/full selection and fail-fast behavior
+remain: sanitized root then nested, each built once and executed three times;
+full mode then adds optimized root and nested with the same three repetitions.
+The oversized-name compile-refusal control remains last in both modes.
+
+For retained evidence, select a fresh absolute directory outside the owner and
+any selected handler source checkout:
+
+```bash
+ZMK_TEST_MODE=full python3 tests/protocol/run.py --output "$EVIDENCE/protocol"
+python3 tests/protocol/run.py --source "$FAULT_HANDLER" \
+  --variant sanitized-nested --output "$EVIDENCE/focused-protocol"
+```
+
+`--variant` accepts `all` (default), `sanitized-root`, `sanitized-nested`,
+`optimized-root`, `optimized-nested`, or `oversized`. A focused variant runs its
+unchanged flags and all three repetitions, even when the selected optimization
+would not be in quick mode; `oversized` runs only the original compile-refusal
+assertion. Focused output and `results.json` explicitly state that the canonical
+full matrix was not run. Focused success cannot replace a complete owner run.
+
+`--output` retains source/fixture/proto/dependency input copies and SHA-256s,
+generated headers/code and copied generator, the actual binaries and SHA-256s,
+exact commands, compiler identity, process exits, durations, compile/run logs,
+working directories and selected inherited environment values. Other environment
+values are omitted, with a hash of the inherited environment for identity.
+`results.json` is written before every command and on failure, including partial
+progress and input drift; source inputs must remain unchanged. An assertion or
+compiler failure leaves the already-built binary and its logs available without
+changing the original fail-fast behavior. Without `--output`, temporary files
+retain their original automatic cleanup. Evidence includes actual local paths;
+review and sanitize a separate publication copy before external sharing.
+The existing `tests/protocol/negative.py --output FRESH_DIRECTORY` now passes a
+fresh retained directory to each unchanged baseline/fault invocation. It keeps
+the original case order, quick selection and detection assertions.
 
 ## Reproducible isolated checks
 
@@ -117,3 +165,19 @@ native scenario, wrong-role and unrelated-fixture controls.
 It runs all configured Jest scenarios in one worker process. The pre-commit
 Jest hook dispatches this same owner entry so nested workers do not multiply
 the global container budget. Build and lint retain their separate package entries.
+
+## Review regressions
+
+The protocol entry retains all prior assertions and adds a grouped-node DT
+variant for every family, links and disabled nodes. Optimized and ASan/UBSan
+binaries each execute three times without rebuilding. The `nested devices omitted`
+source fault restores the root-only trackball encoder and must fail the same
+assertions after successful compilation. It restores both the matching link
+encoder definition and device enumeration, so grouped nodes do not leave an
+unused link function under the unchanged `-Werror` flags. The other four source
+faults and the five-case order remain unchanged; every replacement must match
+exactly once. `tests/nested` builds the same handler
+with actual grouped Devicetree nodes and retains the Studio registration snapshot.
+The peripheral board variant requests the unavailable RPC option with Kconfig
+warnings nonfatal for that target only, and requires the resolved module option
+to be disabled; all three original board variants remain unchanged.

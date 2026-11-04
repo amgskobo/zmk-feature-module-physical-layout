@@ -1,0 +1,41 @@
+#include "../studio/native_sim.keymap"
+
+/ {
+    addons {
+        nested_ball {
+            compatible = "cormoran,physical-layout-trackball";
+            display-name = "Grouped Trackball";
+            size = <120>;
+            x = <100>;
+            y = <200>;
+            linked-device-identifiers = "synthetic_ball";
+            linked-subsystems = "synthetic__input";
+        };
+        nested_pad {
+            compatible = "cormoran,physical-layout-touch-pad";
+            display-name = "Grouped Pad";
+            width = <120>;
+            height = <80>;
+            x = <300>;
+            y = <200>;
+            linked-device-identifiers = "synthetic_pad";
+            linked-subsystems = "synthetic__input";
+        };
+        nested_module {
+            compatible = "cormoran,physical-layout-custom-module";
+            display-name = "Grouped Module";
+            type = "display";
+            width = <100>;
+            height = <100>;
+            x = <400>;
+            y = <200>;
+            linked-device-identifiers = "synthetic_display";
+            linked-subsystems = "synthetic__display";
+        };
+        nested_encoders {
+            compatible = "cormoran,physical-layout-rotary-encoders";
+            display-name = "Grouped Encoders";
+            encoders = <&encoder0 &encoder1>;
+        };
+    };
+};

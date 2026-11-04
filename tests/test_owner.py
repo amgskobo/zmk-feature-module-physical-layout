@@ -68,6 +68,7 @@ class WestCommandsTests(unittest.TestCase):
         verify_native(test_build_dir, THIS_DIR / "tests")
         self.assertIn("PASS: test", result.stdout, result.stdout + result.stderr)
         self.assertIn("PASS: studio", result.stdout, result.stdout + result.stderr)
+        self.assertIn("PASS: nested", result.stdout, result.stdout + result.stderr)
         self.assertNotIn("FAILED: ", result.stdout, result.stdout + result.stderr)
 
     @unittest.skipUnless(platform.system() == "Linux", "host build requires Linux")
@@ -87,6 +88,17 @@ class WestCommandsTests(unittest.TestCase):
     def test_zmk_build(self):
         self._test_zmk_build(
             {
+                "physical_layout_peripheral_rpc_unavailable": ConfigAndDeviceTree(
+                    config=[
+                        "CONFIG_ZMK_STUDIO=y",
+                        "CONFIG_ZMK_SPLIT=y",
+                        "# CONFIG_ZMK_SPLIT_ROLE_CENTRAL is not set",
+                        "CONFIG_ZMK_PHYSICAL_LAYOUTS_FEATURE=y",
+                        "# CONFIG_ZMK_STUDIO_RPC is not set",
+                        NotFound("CONFIG_ZMK_PHYSICAL_LAYOUTS_FEATURE_STUDIO_RPC=y"),
+                    ],
+                    device=[],
+                ),
                 "physical_layout_board_feature_disabled": ConfigAndDeviceTree(
                     config=[
                         'CONFIG_ZMK_KEYBOARD_NAME="Module Test"',

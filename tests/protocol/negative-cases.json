@@ -20,6 +20,17 @@
       "name": "missing physical device presence",
       "old": "device.enabled = DT_NODE_HAS_STATUS(node_id, okay);",
       "new": "device.enabled = true;"
+    },
+    {
+      "name": "nested devices omitted",
+      "old": "DT_FOREACH_NODE(PHYSICAL_LAYOUT_TRACKBALL_ENCODE_IF);",
+      "new": "DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_TRACKBALL_ENCODE_IF);",
+      "additional_replacements": [
+        {
+          "old": "DT_FOREACH_NODE(PHYSICAL_LAYOUT_TRACKBALL_LINK_ENCODER);",
+          "new": "DT_FOREACH_CHILD(DT_ROOT, PHYSICAL_LAYOUT_TRACKBALL_LINK_ENCODER);"
+        }
+      ]
     }
   ]
 }

@@ -41,7 +41,21 @@ CONFIG_ZMK_PHYSICAL_LAYOUTS_FEATURE=y
 CONFIG_ZMK_PHYSICAL_LAYOUTS_FEATURE_STUDIO_RPC=y
 ```
 
+The RPC option requires core `CONFIG_ZMK_STUDIO_RPC`, which is unavailable on
+split peripherals. The static feature can remain enabled there without compiling
+the RPC handler.
+
 ## Devicetree
+
+Module nodes can be direct children of the root or grouped below container nodes.
+Both enabled and disabled nodes are reported with their corresponding `enabled`
+flag; nesting does not omit their geometry or links.
+
+Each reported device's `identifier` is its Devicetree node's full name,
+including any unit address; parent paths are omitted. Choose unique node names
+across all physical-device families and groups. The Web UI uses these identifiers
+as rendering keys, so separate containers do not provide separate identifier
+namespaces.
 
 Define each non-key physical module with one of the dedicated compatibles below. Coordinates and sizes use the same unit as ZMK `zmk,physical-layout` key attributes. For example, `x = <100>` matches a ZMK key physical layout `x = 100`, and `size = <120>` means the module is 120 units wide and 120 units tall.
 
@@ -145,6 +159,13 @@ ry = <200>;
 ## Web UI
 
 The web UI lives in `web/` and uses the unofficial custom Studio RPC protocol.
+
+Layout reads have a five-second deadline. If a reply is lost, the panel shows
+an error and leaves Loading. Disconnect and reconnect before retrying: the
+selected Studio client cannot cancel its pending stream read, so Refresh sends
+no further requests on a timed-out connection. Late replies are ignored. An
+official key-layout read that rejects, for example while Studio is locked,
+still permits the public module geometry to render without keys.
 
 ```sh
 cd web
