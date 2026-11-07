@@ -33,19 +33,33 @@ static bool decode_device(pb_istream_t *stream, const pb_field_t *field, void **
     assert(v.enabled == (device_count != 1));
     if (device_count == 0) {
         assert(v.which_device_type == 4 && v.device_type.trackball.has_attrs);
+#ifdef FIXTURE_BOUNDARY_LAYOUT
+        assert(v.device_type.trackball.attrs.x == INT32_MIN &&
+               v.device_type.trackball.attrs.y == INT32_MAX &&
+               v.device_type.trackball.attrs.size == 1);
+#else
         assert(v.device_type.trackball.attrs.x == -100 && v.device_type.trackball.attrs.y == 200 &&
                v.device_type.trackball.attrs.size == 3400);
+#endif
     } else if (device_count == 1) {
         assert(v.which_device_type == 6 && v.device_type.touch_pad.has_attrs);
         cormoran_zmk_physical_layouts_RectPhysicalAttrs a = v.device_type.touch_pad.attrs;
-        assert(a.width == 4000 && a.height == 3000 && a.x == -10 && a.y == 20 && a.r == -45 &&
-               a.rx == 100 && a.ry == 200);
+        assert(a.x == -10 && a.y == 20 && a.r == -45 && a.rx == 100 && a.ry == 200);
+#ifdef FIXTURE_BOUNDARY_LAYOUT
+        assert(a.width == INT32_MAX && a.height == 1);
+#else
+        assert(a.width == 4000 && a.height == 3000);
+#endif
     } else {
         assert(v.which_device_type == 7 && v.device_type.custom_module.has_attrs &&
                !strcmp(v.device_type.custom_module.type, "custom-type"));
         cormoran_zmk_physical_layouts_RectPhysicalAttrs a = v.device_type.custom_module.attrs;
-        assert(a.width == 100 && a.height == 200 && a.x == 300 && a.y == 400 && a.r == 90 &&
-               a.rx == -5 && a.ry == 6);
+        assert(a.x == 300 && a.y == 400 && a.r == 90 && a.rx == -5 && a.ry == 6);
+#ifdef FIXTURE_BOUNDARY_LAYOUT
+        assert(a.width == 1 && a.height == INT32_MAX);
+#else
+        assert(a.width == 100 && a.height == 200);
+#endif
     }
     device_count++;
     return true;
@@ -57,8 +71,12 @@ static bool decode_encoder(pb_istream_t *stream, const pb_field_t *field, void *
         cormoran_zmk_physical_layouts_RotaryEncoder_init_zero;
     assert(pb_decode(stream, cormoran_zmk_physical_layouts_RotaryEncoder_fields, &v));
     assert(encoder_count < 2 && v.has_attrs && v.enabled == (encoder_count == 0));
-    assert(v.attrs.x == (encoder_count ? 789 : -123) && v.attrs.y == (encoder_count ? -987 : 456) &&
-           v.attrs.size == (encoder_count ? 1400 : 1200));
+    assert(v.attrs.x == (encoder_count ? 789 : -123) && v.attrs.y == (encoder_count ? -987 : 456));
+#ifdef FIXTURE_BOUNDARY_LAYOUT
+    assert(v.attrs.size == (encoder_count ? 1 : INT32_MAX));
+#else
+    assert(v.attrs.size == (encoder_count ? 1400 : 1200));
+#endif
     encoder_count++;
     return true;
 }

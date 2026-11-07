@@ -1,4 +1,5 @@
 import platform
+import json
 import os
 import tempfile
 import subprocess
@@ -74,7 +75,12 @@ class WestCommandsTests(unittest.TestCase):
     @unittest.skipUnless(platform.system() == "Linux", "host build requires Linux")
     def test_protocol(self):
         result = subprocess.run(
-            ["python3", str(THIS_DIR / "tests" / "protocol" / "run.py")],
+            [
+                "python3",
+                str(THIS_DIR / "tests" / "protocol" / "run.py"),
+                "--output",
+                str(self.BUILD_DIR / "protocol"),
+            ],
             env={**os.environ, "ZMK_TEST_MODE": "full"},
             capture_output=True,
             text=True,
@@ -84,6 +90,22 @@ class WestCommandsTests(unittest.TestCase):
             result.stdout + result.stderr, encoding="utf-8"
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        results = json.loads((self.BUILD_DIR / "protocol/results.json").read_text())
+        self.assertEqual(results["status"], "PASS")
+        self.assertTrue(results["full_matrix_completed"])
+        self.assertEqual(
+            results["completed_variants"],
+            [
+                "sanitized-root",
+                "sanitized-nested",
+                "sanitized-boundary",
+                "optimized-root",
+                "optimized-nested",
+                "optimized-boundary",
+                "invalid-dimensions",
+                "oversized",
+            ],
+        )
 
     def test_zmk_build(self):
         self._test_zmk_build(

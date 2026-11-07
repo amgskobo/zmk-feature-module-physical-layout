@@ -377,14 +377,43 @@ export function PhysicalLayoutSection() {
         rotaryEncoders: [],
       };
 
-      if (modulePayload) {
-        const resp = Response.decode(modulePayload);
-        if (resp.physicalLayout) {
-          nextLayout.modules = resp.physicalLayout.devices;
-          nextLayout.rotaryEncoders = resp.physicalLayout.rotaryEncoders ?? [];
-        } else if (resp.error) {
-          throw new Error(resp.error.message);
-        }
+      if (!modulePayload) {
+        throw new Error("Missing physical layout response");
+      }
+      const resp = Response.decode(modulePayload);
+      if (resp.error)
+        throw new Error(
+          resp.error.message || "Physical layout response failed"
+        );
+      if (!resp.physicalLayout) {
+        throw new Error("Unsupported physical layout response");
+      }
+      nextLayout.modules = resp.physicalLayout.devices;
+      nextLayout.rotaryEncoders = resp.physicalLayout.rotaryEncoders;
+      if (
+        new Set(nextLayout.modules.map((module) => module.identifier)).size !==
+        nextLayout.modules.length
+      ) {
+        throw new Error("Duplicate identifiers in physical layout response");
+      }
+      const positive = (value: number | undefined) =>
+        value !== undefined && value > 0;
+      if (
+        nextLayout.modules.some(
+          (module) =>
+            (module.trackball && !positive(module.trackball.attrs?.size)) ||
+            (module.touchPad &&
+              (!positive(module.touchPad.attrs?.width) ||
+                !positive(module.touchPad.attrs?.height))) ||
+            (module.customModule &&
+              (!positive(module.customModule.attrs?.width) ||
+                !positive(module.customModule.attrs?.height)))
+        ) ||
+        nextLayout.rotaryEncoders.some(
+          (encoder) => !positive(encoder.attrs?.size)
+        )
+      ) {
+        throw new Error("Invalid geometry in physical layout response");
       }
 
       setView((previous) => ({ ...previous, layout: nextLayout }));

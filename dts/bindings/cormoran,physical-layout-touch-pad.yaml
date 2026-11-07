@@ -13,10 +13,12 @@ properties:
   width:
     type: int
     required: true
+    description: Positive int32 width in the same coordinate units as ZMK key physical layouts.
 
   height:
     type: int
     required: true
+    description: Positive int32 height in the same coordinate units as ZMK key physical layouts.
 
   x:
     type: int

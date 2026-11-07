@@ -53,13 +53,22 @@ ZMK_RPC_CUSTOM_SUBSYSTEM_RESPONSE_BUFFER(cormoran__physical_layouts,
     LISTIFY(DT_PROP_LEN_OR(node_id, linked_device_identifiers, 0),                                 \
             PHYSICAL_LAYOUT_LINK_STRINGS_ASSERT, (), node_id)
 
+#define PHYSICAL_LAYOUT_DIMENSION_ASSERT(node_id, prop)                                            \
+    BUILD_ASSERT(DT_PROP(node_id, prop) > 0 && DT_PROP(node_id, prop) <= INT32_MAX,                \
+                 "physical layout dimensions must be positive int32 values")
+
 #define PHYSICAL_LAYOUT_TRACKBALL_ASSERT(node_id)                                                  \
     COND_CODE_1(DT_NODE_HAS_COMPAT(node_id, cormoran_physical_layout_trackball),                   \
-                (PHYSICAL_LAYOUT_DEVICE_ASSERT(node_id);), ())
+                (PHYSICAL_LAYOUT_DEVICE_ASSERT(node_id);                                           \
+                 PHYSICAL_LAYOUT_DIMENSION_ASSERT(node_id, size);),                                \
+                ())
 
 #define PHYSICAL_LAYOUT_TOUCH_PAD_ASSERT(node_id)                                                  \
     COND_CODE_1(DT_NODE_HAS_COMPAT(node_id, cormoran_physical_layout_touch_pad),                   \
-                (PHYSICAL_LAYOUT_DEVICE_ASSERT(node_id);), ())
+                (PHYSICAL_LAYOUT_DEVICE_ASSERT(node_id);                                           \
+                 PHYSICAL_LAYOUT_DIMENSION_ASSERT(node_id, width);                                 \
+                 PHYSICAL_LAYOUT_DIMENSION_ASSERT(node_id, height);),                              \
+                ())
 
 #define PHYSICAL_LAYOUT_CUSTOM_MODULE_TYPE_ASSERT(node_id)                                         \
     PHYSICAL_LAYOUT_STRING_ASSERT(DT_PROP(node_id, type),                                          \
@@ -68,12 +77,19 @@ ZMK_RPC_CUSTOM_SUBSYSTEM_RESPONSE_BUFFER(cormoran__physical_layouts,
 #define PHYSICAL_LAYOUT_CUSTOM_MODULE_ASSERT(node_id)                                              \
     COND_CODE_1(DT_NODE_HAS_COMPAT(node_id, cormoran_physical_layout_custom_module),               \
                 (PHYSICAL_LAYOUT_DEVICE_ASSERT(node_id);                                           \
-                 PHYSICAL_LAYOUT_CUSTOM_MODULE_TYPE_ASSERT(node_id);),                             \
+                 PHYSICAL_LAYOUT_CUSTOM_MODULE_TYPE_ASSERT(node_id);                               \
+                 PHYSICAL_LAYOUT_DIMENSION_ASSERT(node_id, width);                                 \
+                 PHYSICAL_LAYOUT_DIMENSION_ASSERT(node_id, height);),                              \
                 ())
+
+#define PHYSICAL_LAYOUT_ROTARY_ENCODER_ASSERT(node_id)                                             \
+    COND_CODE_1(DT_NODE_HAS_COMPAT(node_id, cormoran_physical_layout_rotary_encoder),              \
+                (PHYSICAL_LAYOUT_DIMENSION_ASSERT(node_id, size);), ())
 
 DT_FOREACH_NODE(PHYSICAL_LAYOUT_TRACKBALL_ASSERT);
 DT_FOREACH_NODE(PHYSICAL_LAYOUT_TOUCH_PAD_ASSERT);
 DT_FOREACH_NODE(PHYSICAL_LAYOUT_CUSTOM_MODULE_ASSERT);
+DT_FOREACH_NODE(PHYSICAL_LAYOUT_ROTARY_ENCODER_ASSERT);
 
 #define PHYSICAL_LAYOUT_LINK_ENCODE(idx, node_id)                                                  \
     do {                                                                                           \

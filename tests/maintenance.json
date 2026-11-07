@@ -23,6 +23,10 @@
     {
       "fixture": "tests/web/deadline-stream.spec.tsx",
       "contract": "Actual SDK global mutex and Web Streams verify that a UI deadline does not cancel a pending read, repeated Refresh queues no work, and stream replacement recovers. Physical transport remains outside this fixture."
+    },
+    {
+      "fixture": "tests/web/response.spec.tsx",
+      "contract": "Twenty missing/unknown/empty-error response and absent/nonpositive geometry cases reject without losing loaded state, then recover to an explicitly empty success. A duplicate-identifier case reproduces the original app's stale SVG/list entries after a valid reduced layout. One independent geometry control covers every family, signed/rotated bounds, disabled encoder indexes and links. All prior twenty-four Web cases remain selected."
     }
   ],
   "preserved_assertions": "Relocated fixtures retain their prior assertions; no snapshot auto-accept or unique assertion removal.",
@@ -33,23 +37,28 @@
   },
   "gaps": [
     "Physical USB/BLE/split delivery, timing, power and retention require matching production-board evidence.",
-    "Host DT accessors are controlled while Zephyr macro utilities and nanopb are real. Owner native/board builds separately validate real DT binding/API compatibility."
+    "Host DT accessors are controlled while Zephyr macro utilities and nanopb are real. Owner native/board builds separately validate real DT binding/API compatibility.",
+    "Multiple physical encoder bundles are concatenated in resolved DT node order; no fixture or runtime check establishes correspondence with actual keyboard sensor indexes."
   ],
-  "native_verification": "tests/native_verifier.py: actual exit, registered test completion, raw ordered logs, unchanged snapshots, identical binary repeated three times.",
+  "native_verification": "tests/native_verifier.py: actual exit, sanitizer diagnostic rejection (including recovering zero-exit ASan/UBSan), registered test completion, raw ordered logs, unchanged snapshots, identical binary repeated three times. Fourteen real-ELF admission controls preserve the original eleven plus two diagnosed failures and a harmless-name/config positive.",
   "review_regressions": {
     "fixtures": [
       "tests/protocol/fixture_dt.h",
+      "tests/protocol/harness.c",
       "tests/nested",
       "tests/zmk-config/build.yaml"
     ],
-    "contract": "Grouped/root device families preserve geometry, links, flags and bounds; the peripheral cannot enable the handler without core RPC. Original assertions and all three board targets retained.",
+    "contract": "Grouped/root device families preserve geometry, links, flags and bounds; signed int32/dimension boundary layouts round-trip independently. Eighteen exact-assertion compile refusals cover six dimensions at zero, negative and int32 overflow. The peripheral cannot enable the handler without core RPC. Original assertions and all three board targets retained.",
     "repeats": "Each optimized/sanitized protocol binary and native fixture executes three times.",
     "negative_control": "nested devices omitted coherently restores root-only trackball link-function generation and matching device enumeration; both selectors match exactly once. Other four faults, five-case order, compiler flags and runtime assertions remain unchanged; compilation failure never counts as detection."
   },
   "protocol_evidence": {
-    "entry": "python3 tests/protocol/run.py [--output FRESH_ABSOLUTE_DIRECTORY] [--variant all|sanitized-root|sanitized-nested|optimized-root|optimized-nested|oversized]",
-    "contract": "No arguments preserve quick/full case order, compiler argv/flags, fixture assertions, same-binary three repetitions and final oversized-name compile-refusal. Focused selection explicitly records canonical full matrix NOT RUN.",
-    "retention": "Explicit output preserves inputs/hashes, generated artifacts, actual binaries/hashes, commands, ordered process logs, selected environment/complete environment hash and partial results even on fail-fast errors; source drift fails admission. The negative dispatcher supplies a fresh output for each unchanged baseline/fault invocation.",
+    "entry": "python3 tests/protocol/run.py [--output FRESH_ABSOLUTE_DIRECTORY] [--variant all|sanitized-root|sanitized-nested|sanitized-boundary|optimized-root|optimized-nested|optimized-boundary|invalid-dimensions|oversized]",
+    "contract": "Quick/full retain original root/nested assertions and same-binary three repetitions, adding boundary runtime layouts before the eighteen dimension refusals and final oversized-name refusal. Focused selection explicitly records canonical full matrix NOT RUN.",
+    "retention": "The canonical owner entry retains protocol output under its fresh output directory and requires all eight full-mode completions. Explicit output preserves inputs/hashes, generated artifacts, actual binaries/hashes, commands, ordered process logs, selected environment/complete environment hash and partial results even on fail-fast errors; source drift fails admission. The negative dispatcher supplies a fresh output for each unchanged baseline/fault invocation.",
     "limits": "No execution is implied by runner setup. Evidence includes local paths and requires a reviewed publication copy; focused results do not replace the complete owner matrix."
-  }
+  },
+  "native_original_control": "python3 tests/native_verifier_negative.py --verifier ISOLATED_ORIGINAL_VERIFIER --output FRESH_ABSOLUTE_EVIDENCE: exactly two specified AssertionError not raised failures and twelve positives, zero errors/skips, with actual diagnosed zero-exit runs; expected suite exit one and qualification are reported separately.",
+  "web_dependencies": "Compatible development transitive updates preserve direct requirements and SDK/React hook/protobuf pins. Full audit retains eighteen development findings (four low, fourteen moderate); omit-dev audit has zero. Clean install/lifecycles, complete Web tests/lint/build cover declared Node 22.23.4 and 24.18.0. No SDK console-suppression boundary is declared.",
+  "native_sanitizers": "Selected DYA combined strict/recovering mock lanes retain core kscan_mock.c:103 signed-shift findings separately from actual exits and snapshot/init completion; sanitizer-clean remains BLOCKED. Strict recovery flags must be checked in actual compile commands. Standalone protocol declares strict combined sanitizers, not a recovering profile. At this Zephyr pin, CONFIG_ASAN_RECOVER=n plus EXTRA_CFLAGS=-fno-sanitize-recover=all covers owner/Zephyr C objects; NSI has separate Make compiler options and the strict runtime uses UBSAN_OPTIONS=halt_on_error=1. Preserve original NSI .d/nsi_config and distinguish compiled flags from runtime policy."
 }

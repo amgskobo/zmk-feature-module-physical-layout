@@ -9,6 +9,15 @@ import subprocess
 import time
 
 
+# Match diagnostic syntax, not enabled options, hook names or sanitizer mentions.
+SANITIZER_DIAGNOSTIC = re.compile(
+    r"(?:\bruntime error:|"
+    r"\b(?:ERROR|WARNING|SUMMARY):\s*"
+    r"(?:AddressSanitizer|UndefinedBehaviorSanitizer|LeakSanitizer|"
+    r"ThreadSanitizer|MemorySanitizer)\b|AddressSanitizer:DEADLYSIGNAL\b)"
+)
+
+
 def enabled_config(path):
     return set(re.findall(r"^(CONFIG_\w+)=y$", path.read_text(), re.M))
 
@@ -134,6 +143,8 @@ def verify_native(output: Path, tests: Path):
                 raise AssertionError(
                     f"{case}: native exit {result.returncode}; see {run}"
                 )
+            if SANITIZER_DIAGNOSTIC.search(raw):
+                raise AssertionError(f"{case}: sanitizer diagnostic; see {run}")
             if re.search(r"\bFAIL:", raw):
                 raise AssertionError(f"{case}: failed owner assertion; see {run}")
             for hook in hooks:

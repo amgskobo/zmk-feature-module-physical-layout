@@ -50,6 +50,19 @@ Run `npm run build` and `npm run lint` in `web/` for source and owner fixture
 checks. Mocked client/DOM observations do not establish browser serial delivery,
 real keyboard geometry, reconnect behavior, or physical acceptance.
 
+`response.spec.tsx` adds twenty-two cases: twenty invalid payload/envelope or
+geometry cases retain a loaded layout and recover on the same connection, and
+one independent geometry case covers every module family, disabled encoder
+indexes, signed coordinates, rotated bounds, centi-degree transforms and links.
+The twenty invalid cases fail against the original app; the geometry control
+passes. An explicitly empty success clears the layout after recovery. All
+twenty-four earlier Web cases remain selected.
+The additional duplicate-identifier case reproduces stale SVG/list entries when
+same-named nodes from different families are followed by a valid reduced layout.
+The original app reports one module while retaining two SVG shapes. Rejecting
+the duplicate response preserves wire identifiers and lets a subsequent valid
+refresh remove the old layout normally.
+
 [maintenance.json](maintenance.json) records supported cores, current commands
 and explicit gaps. It is a reference map, not a passing test or a claim that
 registration/coverage totals establish completeness. Preserve ordered outputs,
@@ -63,8 +76,10 @@ for a focused case; discovery runs the complete documented class.
 
 The native verifier runs each built binary three times in independent empty
 initial-flash directories, retaining raw output before filtering. It checks real
-process exits, fatal assertions and every linked checked-init result before
-comparing unchanged owner snapshots. A SYS_INIT error cannot be hidden by a
+process exits, sanitizer diagnostics, fatal assertions and every linked checked-init
+result before comparing unchanged owner snapshots. Recovering ASan/UBSan findings
+reject the clean gate even when the process exits zero and completes its snapshot;
+raw process and verifier results remain separate observations. A SYS_INIT error cannot be hidden by a
 later matching key trace. Native scheduling and controlled APIs still do not
 establish physical transport/retention. Test-only core/tool dependencies are
 pinned; update pins only after reviewing the new sources and rerunning this
@@ -86,9 +101,16 @@ source is patched. This complements registration/native and board checks. A
 fixture display-name longer than its 64-byte message field must fail to build.
 The runner is also `test_owner.WestCommandsTests.test_protocol`.
 
-With no arguments, the existing quick/full selection and fail-fast behavior
-remain: sanitized root then nested, each built once and executed three times;
-full mode then adds optimized root and nested with the same three repetitions.
+With no arguments, fail-fast selection runs sanitized root, nested and signed
+int32/dimension boundary layouts, each built once and executed three times;
+full mode then adds the same three optimized layouts with three repetitions.
+The boundary layout independently decodes `INT32_MIN`/`INT32_MAX` coordinates and
+positive dimensions of `1`/`INT32_MAX`. Eighteen compile-refusal controls cover
+zero, negative and greater-than-int32 dimensions for trackball size, encoder
+size, and both rectangle dimensions. Each requires the exact
+`physical layout dimensions must be positive int32 values` assertion; an
+unrelated compiler failure does not qualify. The original handler compiles the
+first zero-size control, so the refusal check fails against that original.
 The oversized-name compile-refusal control remains last in both modes.
 
 For retained evidence, select a fresh absolute directory outside the owner and
@@ -101,11 +123,16 @@ python3 tests/protocol/run.py --source "$FAULT_HANDLER" \
 ```
 
 `--variant` accepts `all` (default), `sanitized-root`, `sanitized-nested`,
-`optimized-root`, `optimized-nested`, or `oversized`. A focused variant runs its
+`sanitized-boundary`, `optimized-root`, `optimized-nested`,
+`optimized-boundary`, `invalid-dimensions`, or `oversized`. A focused runtime variant runs its
 unchanged flags and all three repetitions, even when the selected optimization
 would not be in quick mode; `oversized` runs only the original compile-refusal
 assertion. Focused output and `results.json` explicitly state that the canonical
 full matrix was not run. Focused success cannot replace a complete owner run.
+`invalid-dimensions` runs only the eighteen specified compile-refusal controls.
+The canonical owner entry passes its fresh `OWNER_TEST_OUTPUT/protocol` path to
+this runner and requires all eight full-mode variant completions, retaining the
+actual binaries, generated schema and per-command logs.
 
 `--output` retains source/fixture/proto/dependency input copies and SHA-256s,
 generated headers/code and copied generator, the actual binaries and SHA-256s,
@@ -158,8 +185,45 @@ reject missing configuration when both the request and build omit it; excluded
 roles cannot replace the requested role. The verifier retains all three raw
 runs before comparing unchanged ordered snapshots and rejects logged failures,
 fatal output and missing/nonzero completions. `tests/test_native_verifier.py`
-owns eleven real-ELF admission controls, including a deliberately missing
-native scenario, wrong-role and unrelated-fixture controls.
+owns fourteen real-ELF admission controls, retaining the eleven previous cases
+and adding real recovering ASan output on stdout, real recovering UBSan output
+on stderr, and a positive case with harmless sanitizer hook names/options.
+The original verifier accepts both diagnosed binaries three times with zero
+process exits, successful checked initialization and matching snapshots; the two
+new rejection assertions fail specifically with `AssertionError not raised`.
+
+To reproduce that named original control without modifying this checkout:
+
+```sh
+python3 tests/native_verifier_negative.py --verifier "$ISOLATED_ORIGINAL_VERIFIER" \
+  --output "$FRESH_ABSOLUTE_EVIDENCE"
+```
+
+The operator requires exactly those two assertion failures among all fourteen
+cases, twelve positive completions, zero errors/skips and six diagnosed,
+zero-exit runs. Its exit remains one to preserve the actual failing-suite status;
+`result.json` separately records qualification. `NATIVE_VERIFIER_CONTROL_OUTPUT`
+retains current admission fixtures, compiler commands, original C/ELF bytes and
+raw run records when running the normal owner entry.
+
+Native ASan-only and optimized lanes can establish their own clean results.
+At the selected DYA pin, strict ASan/UBSan may stop at
+`app/module/drivers/kscan/kscan_mock.c:103` (`1 << 31`). The recovering combined
+lane can complete the same snapshot while still reporting undefined behavior;
+both combined clean gates remain BLOCKED. Keep every raw diagnostic, actual
+process exit, source hash and ownership classification, and distinguish direct
+three-trial observations from a verifier group that rejects its first finding.
+Strict combined builds require `CONFIG_ASAN_RECOVER=n` and, at this Zephyr pin,
+`-DEXTRA_CFLAGS=-fno-sanitize-recover=all` for owner/Zephyr objects; the Kconfig
+switch alone does not add the strict flag. Verify the actual final compiler
+flags because a later recovery flag overrides an earlier strict flag.
+The separately compiled NSI host runner does not inherit `EXTRA_CFLAGS`;
+retain its `nsi_config`, original Make dependency files and compiler options.
+The strict lane also sets `UBSAN_OPTIONS=halt_on_error=1`, including for NSI;
+do not extend the owner/Zephyr compiler-flag claim to that host runner.
+The standalone protocol sanitizer profile already uses
+`-fsanitize=address,undefined -fno-sanitize-recover=all`; it does not declare a
+recovering runtime profile.
 
 `bash tests/run-web.sh` is the canonical schema-generation/Web test entry.
 It runs all configured Jest scenarios in one worker process. The pre-commit
@@ -181,3 +245,9 @@ with actual grouped Devicetree nodes and retains the Studio registration snapsho
 The peripheral board variant requests the unavailable RPC option with Kconfig
 warnings nonfatal for that target only, and requires the resolved module option
 to be disabled; all three original board variants remain unchanged.
+
+The native grouped fixture validates actual DTS binding/handler compilation and
+subsystem registration. The host protocol fixture validates the exact serialized
+data separately with controlled DT accessors. Neither verifies that multiple
+encoder bundles correspond to a keyboard's official sensor indexes; installation
+must keep a single bundle's phandle order aligned with `zmk,keymap-sensors`.

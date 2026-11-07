@@ -30,8 +30,11 @@ parser.add_argument(
         "all",
         "sanitized-root",
         "sanitized-nested",
+        "sanitized-boundary",
         "optimized-root",
         "optimized-nested",
+        "optimized-boundary",
+        "invalid-dimensions",
         "oversized",
     ),
     default="all",
@@ -325,6 +328,7 @@ with storage as folder:
             for layout, layout_flags in [
                 ("root", []),
                 ("nested", ["-DFIXTURE_NESTED_LAYOUT"]),
+                ("boundary", ["-DFIXTURE_BOUNDARY_LAYOUT"]),
             ]:
                 label = mode + "-" + layout
                 if args.variant not in ("all", label):
@@ -342,6 +346,36 @@ with storage as folder:
                     print(mode, layout, "PASS repeat", repeat, flush=True)
                 results["completed_variants"].append(label)
                 save_results()
+
+        if args.variant in ("all", "invalid-dimensions"):
+            for dimension in range(1, 7):
+                for value, label in (
+                    ("0", "zero"),
+                    ("-1", "negative"),
+                    ("2147483648ULL", "overflow"),
+                ):
+                    invalid = invoke(
+                        f"compile-dimension-{dimension}-{label}",
+                        compile_command(
+                            work / f"dimension-{dimension}-{label}",
+                            [
+                                "-O0",
+                                f"-DFIXTURE_DIMENSION={dimension}",
+                                f"-DFIXTURE_DIMENSION_VALUE={value}",
+                            ],
+                        ),
+                        capture=True,
+                    )
+                    if (
+                        invalid.returncode == 0
+                        or "physical layout dimensions must be positive int32 values"
+                        not in invalid.stderr
+                    ):
+                        raise SystemExit(
+                            f"invalid physical layout dimension {dimension} ({label}) was not rejected by its assertion"
+                        )
+            print("invalid dimensions: rejected all 18 build-time controls", flush=True)
+            results["completed_variants"].append("invalid-dimensions")
 
         # A devicetree string longer than its message field must not build: it
         # would otherwise be cut silently.

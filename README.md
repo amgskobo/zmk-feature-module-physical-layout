@@ -55,9 +55,15 @@ Each reported device's `identifier` is its Devicetree node's full name,
 including any unit address; parent paths are omitted. Choose unique node names
 across all physical-device families and groups. The Web UI uses these identifiers
 as rendering keys, so separate containers do not provide separate identifier
-namespaces.
+namespaces. The Web UI rejects a response with duplicate device identifiers
+and preserves the last loaded layout; it does not rewrite the wire identifiers.
 
 Define each non-key physical module with one of the dedicated compatibles below. Coordinates and sizes use the same unit as ZMK `zmk,physical-layout` key attributes. For example, `x = <100>` matches a ZMK key physical layout `x = 100`, and `size = <120>` means the module is 120 units wide and 120 units tall.
+
+Dimensions (`size`, `width`, `height`) must be positive 32-bit signed values
+(`1` through `2147483647`); invalid dimensions fail compilation. Zero is not a
+dimension sentinel. Use the node's `status` to mark a module disabled. Coordinates
+can be zero or negative, and an empty set of module nodes is valid.
 
 ### Trackball
 
@@ -81,6 +87,11 @@ Trackballs use `x`, `y`, and `size`.
 ### Rotary Encoders
 
 Rotary encoders are bundled so each physical encoder can be mapped to ZMK's official rotary encoder array. The position in the `encoders` phandle array is used as the encoder index. Each encoder uses `x`, `y`, and `size`.
+
+Use one bundle with its phandles in the same order as the keyboard's
+`zmk,keymap-sensors` array when indexes must correspond to official sensor
+indexes. Multiple bundles are concatenated in resolved Devicetree node order;
+the module does not validate their correspondence with the actual sensor array.
 
 ```dts
 / {
@@ -166,6 +177,11 @@ selected Studio client cannot cancel its pending stream read, so Refresh sends
 no further requests on a timed-out connection. Late replies are ignored. An
 official key-layout read that rejects, for example while Studio is locked,
 still permits the public module geometry to render without keys.
+
+A settled reply without the expected physical-layout response, or a known
+module with missing attributes or nonpositive dimensions, shows an error and
+preserves the last loaded layout. Refresh can recover on that same connection.
+An explicitly empty physical-layout response remains a valid empty layout.
 
 ```sh
 cd web
