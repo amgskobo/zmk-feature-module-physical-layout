@@ -261,22 +261,16 @@ static bool encode_rotary_encoders(pb_ostream_t *stream, const pb_field_t *field
 }
 
 static void handle_get_physical_layout_request(cormoran_zmk_physical_layouts_Response *resp) {
-    cormoran_zmk_physical_layouts_GetPhysicalLayoutResponse result =
-        cormoran_zmk_physical_layouts_GetPhysicalLayoutResponse_init_zero;
-
-    result.devices.funcs.encode = encode_physical_devices;
-    result.rotary_encoders.funcs.encode = encode_rotary_encoders;
-
+    /* Allocation already clears the response, including both callback arguments. */
     resp->which_response_type = cormoran_zmk_physical_layouts_Response_physical_layout_tag;
-    resp->response_type.physical_layout = result;
+    resp->response_type.physical_layout.devices.funcs.encode = encode_physical_devices;
+    resp->response_type.physical_layout.rotary_encoders.funcs.encode = encode_rotary_encoders;
 }
 
 static void set_error(cormoran_zmk_physical_layouts_Response *resp, const char *message) {
-    cormoran_zmk_physical_layouts_ErrorResponse err =
-        cormoran_zmk_physical_layouts_ErrorResponse_init_zero;
-    snprintf(err.message, sizeof(err.message), "%s", message);
     resp->which_response_type = cormoran_zmk_physical_layouts_Response_error_tag;
-    resp->response_type.error = err;
+    snprintf(resp->response_type.error.message, sizeof(resp->response_type.error.message), "%s",
+             message);
 }
 
 static bool physical_layouts_rpc_handle_request(const zmk_custom_CallRequest *raw_request,

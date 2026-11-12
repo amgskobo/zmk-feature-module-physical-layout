@@ -191,6 +191,12 @@ npm run dev
 
 ## Development
 
+Firmware responses use DYA's sequenced response buffer, cleared at allocation.
+The handler fills that buffer directly; its encoding callbacks retain no pointers
+to dispatch-local objects. Geometry and links still come from Devicetree on each
+encoding pass, including nanopb's sizing passes. This module adds no settings
+store or input history: linked settings remain with their named subsystem owners.
+
 ```sh
 pre-commit run
 python3 -m unittest discover -s tests -p test_owner.py

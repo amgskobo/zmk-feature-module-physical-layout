@@ -101,6 +101,13 @@ source is patched. This complements registration/native and board checks. A
 fixture display-name longer than its 64-byte message field must fail to build.
 The runner is also `test_owner.WestCommandsTests.test_protocol`.
 
+Response construction fills the already-cleared DYA response buffer directly.
+The existing malformed/unsupported dispatch and recovery assertions cover both
+union alternatives after repeated allocation. The serialized schema, fixed
+string capacities, callback arguments, device order and security policy remain
+unchanged. ARM compiler frames and linked memory are separate measurements;
+neither a compiler frame nor a native trace establishes physical stack high-water.
+
 With no arguments, fail-fast selection runs sanitized root, nested and signed
 int32/dimension boundary layouts, each built once and executed three times;
 full mode then adds the same three optimized layouts with three repetitions.
